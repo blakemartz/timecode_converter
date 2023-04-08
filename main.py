@@ -20,18 +20,21 @@ def frames_to_timecode(frames, fps):
 
 
 def convert_timecode(timecode):
-    frames_2398 = timecode_to_frames(timecode, 23.98)
-    frames_2997 = frames_2398 * (30000 / 1001) / (24000 / 1001)
+    frames_2398 = timecode_to_frames(timecode, 23.976)  # Use the exact frame rate
+    time_in_seconds = frames_2398 * (1001 / 24000)  # Convert to real-time (in seconds)
 
-    drop_frames = math.floor(frames_2997 / 17982) * 18 + math.floor((frames_2997 % 17982) / 1798)
-    frames_2997_adjusted = frames_2997 + drop_frames
+    # Convert real-time to frames at 29.97 fps drop-frame
+    frames_2997 = time_in_seconds * (30000 / 1001)
+    drop_frames = 2 * math.floor(frames_2997 / 1800) - math.floor(math.floor(frames_2997 / 1800) / 10)
+
+    frames_2997_adjusted = round(frames_2997 - drop_frames)
     timecode_2997 = frames_to_timecode(frames_2997_adjusted, 30)
 
     return timecode_2997.replace(':', ';', 2)
 
 
 input_csv = 'input_timecodes.csv'
-output_csv = 'output_timecodes.csv'
+output_csv = 'output_timecodes_accu.csv'
 
 with open(input_csv, 'r') as infile, open(output_csv, 'w') as outfile:
     csv_reader = csv.reader(infile)
